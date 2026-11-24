@@ -1,0 +1,65 @@
+{% extends "base.html" %}{% block body %}
+<p class="muted"><a href="{{ {'student':'/student','staff':'/staff','admin':'/admin'}[me.role] }}">&larr; back to my page</a> &middot; <a href="/board">public board</a></p>
+
+<div class="panel" style="border-top:4px solid {{ {'critical':'var(--crit)','high':'var(--high)','medium':'var(--med)','low':'#cbd5e1'}[i.base_priority] }}">
+ <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+  <span class="muted" style="font-weight:700">Issue #{{i.id}}</span>
+  <span class="badge p-{{i.base_priority}}">{{i.base_priority}}</span>
+  <span class="badge s-{{i.status}}">{{i.status|replace('_',' ')}}</span>
+  {% if i.is_safety %}<span class="badge b-safety">&#9888; safety</span>{% endif %}
+  {% if i.is_confidential %}<span class="badge b-conf">&#128274; CONFIDENTIAL</span>{% endif %}
+  {% if i.reopen_count %}<span class="badge p-high">reopened {{i.reopen_count}}&times;</span>{% endif %}
+ </div>
+ <h2 style="margin:8px 0 4px">{{i.title}}</h2>
+ <p class="muted" style="margin:0 0 12px">AI reason: {{i.reason}}</p>
+ <div class="stats" style="margin:0">
+  <div class="card"><b>{{i.score}}</b>score <span style="text-transform:none;font-weight:400">(base + {{i.boost}} crowd)</span></div>
+  <div class="card"><b style="font-size:17px">{{i.department or 'ADMIN ONLY'}}</b>department</div>
+  <div class="card"><b style="font-size:17px">{{i.location or '-'}}</b>location</div>
+  <div class="card"><b style="font-size:17px">{{i.category|replace('_',' ')}}</b>category</div>
+  <div class="card"><b>{{i.reporters}}</b>distinct reporters <span style="text-transform:none;font-weight:400">(weighted {{i.weighted}})</span></div>
+ </div>
+ {% if reporters %}<p style="margin:12px 0 0"><b>Reporters:</b> {{ reporters|join(', ') }}</p>{% endif %}
+ {% if can_join %}<form method="post" action="/issue/{{i.id}}/metoo" style="margin-top:12px"><button>+ Me too: I have this problem as well</button></form>{% elif affected and me.role == 'student' %}<p class="muted" style="margin-top:10px">&#10004; You are counted on this issue.</p>{% endif %}
+</div>
+
+{% if i.status=='resolved' %}
+<div class="panel" style="border-left:4px solid #7e22ce">
+ <h3 style="margin-top:0">Is it really fixed? <span class="muted">(round {{i.vote_round}})</span></h3>
+ <p>&#10004; Confirm weight <b>{{tally.confirm_w}}</b> ({{tally.confirms}}) &middot; &#10008; Dispute weight <b>{{tally.dispute_w}}</b> ({{tally.disputes}}) &middot; affected weight {{tally.affected_w}} &middot; reopen needs &ge; {{tally.reopen_needed}}</p>
+ {% if i.hours_left is not none %}<p class="muted">Voting auto-closes in <b>{{i.hours_left}}h</b>. Then it is <b>verified</b> unless credible disputes &ge; confirms (then it reopens).</p>{% endif %}
+ {% if me.role=='student' and affected and not my_vote %}<form method="post" action="/issue/{{i.id}}/vote">
+ <button name="vote" value="confirm" style="padding:9px 16px">&#10004; Confirm fixed</button> <button name="vote" value="dispute" style="padding:9px 16px">&#10008; Still broken</button></form>
+ {% elif my_vote %}<p>You voted: <span class="badge {{'s-verified' if my_vote[0]=='confirm' else 'p-critical'}}">{{my_vote[0]}}</span></p>{% elif me.role=='student' %}<p class="muted">Only students who reported or joined this issue can vote.</p>{% endif %}
+ {% if me.role == 'admin' %}<form method="post" action="/issue/{{i.id}}/close-voting"><button>Close voting now (same rule)</button></form>{% endif %}
+</div>
+{% endif %}
+
+{% if can_manage %}
+<div class="panel">
+ <h3 style="margin-top:0">Actions</h3>
+ <form method="post" action="/issue/{{i.id}}/status"><b>Set status:</b>
+ {% for s in (['in_progress','resolved','rejected','open','verified'] if me.role == 'admin' else ['in_progress','resolved','rejected','open']) %}<button name="to" value="{{s}}">{{s|replace('_',' ')}}</button> {% endfor %}
+ <input name="note" placeholder="note (optional)"></form>
+ <p class="muted">Reject only fake/spam reports: it costs the reporters trust (-15 / -5).</p>
+ {% if not i.is_confidential and i.status in ['open','in_progress'] %}
+ <form method="post" action="/issue/{{i.id}}/transfer"><b>Wrong department? Transfer (no trust penalty):</b>
+ <select name="department">{% for d in departments %}<option>{{d}}</option>{% endfor %}</select> <input name="note" placeholder="note"> <button>Transfer</button></form>{% endif %}
+</div>
+{% endif %}
+
+<div class="panel">
+ <h3 style="margin-top:0">History</h3>
+ <ul class="log">{% for l in log %}<li><span class="muted">{{l.created_at[:16]|replace('T',' ')}}</span> &nbsp;{{l.from_status or '&empty;'|safe}} &rarr; <b>{{l.to_status}}</b> {% if l.actor %}by {{l.actor}}{% endif %}{% if l.note %} <span class="muted">&mdash; {{l.note}}</span>{% endif %}</li>{% endfor %}</ul>
+</div>
+
+{% if reports %}
+<div class="panel">
+ <h3 style="margin-top:0">Reports &amp; triage audit</h3>
+ {% for r in reports %}
+ <div style="border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:8px 0;background:#fbfcfe">{% if anon_reporter and i.is_confidential %}<b>{{anon_reporter(r.user_id)}}</b>: {% endif %}&ldquo;{{r.raw_text}}&rdquo; <span class="muted">[{{r.state}}, {{r.triage_source}}]</span>
+ {% set t = r.triage_json|fromjson %}{% if t.guards %}<ul class="muted" style="margin:4px 0 0">{% for g in t.guards %}<li>code guard: {{g}}</li>{% endfor %}</ul>{% endif %}</div>
+ {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

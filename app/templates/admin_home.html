@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% from "macros.html" import issue_table %}{% block body %}
+<h2>Admin overview</h2>
+<div class="stats">
+ <div class="card {{'alert' if stats.critical_open}}"><b>{{stats.critical_open}}</b>critical open</div>
+ <div class="card"><b>{{stats.open}}</b>open</div><div class="card"><b>{{stats.in_progress}}</b>in progress</div>
+ <div class="card"><b>{{stats.awaiting_votes}}</b>awaiting votes</div><div class="card"><b>{{stats.verified}}</b>verified</div>
+ <div class="card"><b>{{stats.reopened}}</b>reopened</div>
+ <div class="card"><a href="/admin/confidential"><b>{{stats.confidential_open}}</b>confidential</a></div>
+ <div class="card"><a href="/admin/flags"><b>{{stats.flags}}</b>flags</a></div>
+</div>
+<p class="tabs"><a href="/admin" class="{{'on' if not dept}}">All departments</a>{% for d in departments %}<a href="/admin?dept={{d}}" class="{{'on' if dept==d}}">{{d}}</a>{% endfor %}</p>
+<p class="muted">Public issues only. Confidential cases live on their own page.</p>
+{{ issue_table(issues, 'admin') }}
+{% endblock %}

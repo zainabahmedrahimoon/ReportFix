@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block body %}
+<h2>My reports</h2>
+<p class="muted">Every report you submitted, newest first, and what became of it.</p>
+<div class="tbl"><table><tr><th>#</th><th>When</th><th>What I wrote</th><th>Result</th><th>Issue</th><th>Routed to</th><th>Priority</th><th>Why</th></tr>
+{% for r in reports %}<tr>
+<td>{{r.id}}</td><td class="muted">{{r.created_at[:16]|replace('T',' ')}}</td><td>{{r.raw_text}}</td>
+<td>{% if r.state == 'routed' %}<span class="badge s-verified">&#10003; New issue created</span>
+{% elif r.state == 'merged' %}<span class="badge s-open">Joined an existing issue (me too)</span>
+{% elif r.state == 'needs_clarification' %}&#9888; <a href="/student/report">Waiting for you: pick a location</a>
+{% elif r.triage_source == 'code' %}<span class="badge p-critical">Rejected as spam/abuse</span><div class="muted">trust points deducted</div>
+{% else %}<span class="badge p-critical">Rejected: too many reports at once</span><div class="muted">trust deducted</div>{% endif %}
+{% if r.injection_flag %}<div class="muted">It contained instructions aimed at the system. They were ignored (-5 trust).</div>{% endif %}</td>
+<td>{% if r.issue_id %}<a href="/issue/{{r.issue_id}}">#{{r.issue_id}}</a> ({{r.issue_status}}){% else %}-{% endif %}</td>
+{% if r.issue_conf %}<td colspan="3">&#128274; Confidential: only the Admin can see it, and your identity is hidden.</td>
+{% else %}<td>{{ r.issue_dept or r.tri.get('department') or '-' }}{% if r.issue_loc or r.tri.get('location') %}<div class="muted">{{ r.issue_loc or r.tri.get('location') }}</div>{% endif %}</td>
+<td>{% set pr = r.issue_priority or r.tri.get('priority') %}{% if pr %}<span class="badge p-{{pr}}">{{pr}}</span>{% else %}-{% endif %}{% if r.issue_safety %} &#9888; safety{% endif %}</td>
+<td class="muted">{{ r.tri.get('reason') or '' }}{% if r.triage_source %}<div>[{{ r.triage_source }}]</div>{% endif %}</td>{% endif %}
+</tr>{% else %}<tr><td colspan="8">You haven't submitted anything yet. <a href="/student/report">Report a problem</a>.</td></tr>{% endfor %}</table></div>
+{% endblock %}

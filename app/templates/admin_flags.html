@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block body %}
+<h2>Flags</h2>
+<p class="muted">Most urgent first.
+<b>critical</b> = physical/sexual harassment case, or a possible safety report stuck without a location &middot;
+<b>high</b> = new harassment/ragging case, prompt-injection attempt, brigading, repeat spammer &middot;
+<b>medium</b> = one-off spam or abuse &middot; <b>low</b> = department transfers, handled cases.
+Students linked to a confidential case are never named here.</p>
+<div class="stats">{% for k, n in kinds.items() %}<div class="card"><b>{{n}}</b>{{k|replace('_',' ')}}</div>{% else %}<div class="card"><b>0</b>flags</div>{% endfor %}</div>
+<div class="tbl"><table><tr><th>Priority</th><th>When</th><th>Kind</th><th>Student</th><th>Issue</th><th>Detail</th></tr>
+{% for f in flags %}<tr class="{{ 'critical' if f.severity == 'critical' else ('high' if f.severity == 'high' else '') }}"><td><span class="badge p-{{ f.severity }}">{{f.severity}}</span>{% if f.done %} <span class="muted">(handled)</span>{% endif %}</td><td class="muted">{{f.created_at[:16]|replace('T',' ')}}</td><td>{{f.kind|replace('_',' ')}}</td>
+<td>{% if f.who %}{{f.who}} <span class="muted">(trust {{'%.0f'|format(f.who_trust)}})</span>{% elif f.kind.startswith('confidential') %}<span class="muted">anonymous</span>{% else %}<span class="muted">-</span>{% endif %}</td>
+<td>{% if f.issue_id %}<a href="/issue/{{f.issue_id}}">#{{f.issue_id}}</a> <span class="muted">{{f.issue_status or ''}}</span>{% endif %}</td><td>{{f.detail}}</td></tr>
+{% else %}<tr><td colspan="6">none</td></tr>{% endfor %}</table></div>
+{% endblock %}

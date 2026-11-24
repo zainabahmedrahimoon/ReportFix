@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% from "macros.html" import issue_table %}{% block body %}
+<h2>Public board</h2>
+<div class="panel"><h3 style="margin-top:0">&#128293; Trending <span class="muted">(most reporters in last 24h)</span></h3><ol style="margin:0">{% for t in trending %}<li><a href="/issue/{{t.id}}">#{{t.id}}</a> {{t.location}}: {{t.title}} &mdash; {{t.recent}} recent</li>{% else %}<li>none</li>{% endfor %}</ol></div>
+{% if me.role == 'student' %}<p class="muted">Seeing your problem here? Press <b>+ Me too</b> instead of reporting it again.</p>{% endif %}
+{{ issue_table(issues, 'board', me) }}{% endblock %}

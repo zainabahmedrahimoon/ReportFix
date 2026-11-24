@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% block body %}
+<h2>Why {{u.name}} has trust {{'%.0f'|format(u.trust)}}</h2>
+<div class="stats">
+ <div class="card {{'alert' if u.trust < 30}}"><b>{{'%.0f'|format(u.trust)}}</b>trust score</div>
+ <div class="card"><b>{{weight}}</b>report / vote weight</div>
+ <div class="card"><b>{{events|length}}</b>logged changes</div>
+</div>
+<p class="muted">Everyone starts at 50. Every change below has a reason.{% if probation %} New account: weight halved until a report or vote is validated.{% endif %}{% if u.trust < 30 %} <b style="color:var(--crit)">Below 30: reports and votes carry zero weight.</b>{% endif %}</p>
+<div class="tbl"><table><tr><th>When</th><th>Δ</th><th>Reason</th><th>After</th></tr>
+<tr><td class="muted">{{u.created_at[:16]|replace('T',' ')}}</td><td>50</td><td>Starting trust</td><td>50</td></tr>
+{% for e in events %}<tr><td class="muted">{{e.created_at[:16]|replace('T',' ')}}</td><td class="num" style="color:{{'var(--ok)' if e.delta > 0 else 'var(--crit)'}}">{{'%+.0f'|format(e.delta)}}</td><td>{{e.reason}}{% if e.issue_id %} (<a href="/issue/{{e.issue_id}}">#{{e.issue_id}}</a>){% endif %}</td><td class="num">{{'%.0f'|format(e.trust_after)}}</td></tr>{% endfor %}</table></div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block body %}
+<p><a href="/admin/summary">AI admin summary</a></p>
+<h3>All issues (🔒 = confidential, reporter anonymized)</h3>
+{% with extra=None %}{% include "_issues.html" %}{% endwith %}
+<h3>Flags (injection / spam / brigading)</h3>
+<div class="tbl"><table><tr><th>When</th><th>Kind</th><th>Issue</th><th>Report</th><th>Detail</th></tr>
+{% for f in flags %}<tr><td>{{f.created_at}}</td><td>{{f.kind}}</td><td>{{f.issue_id or ''}}</td><td>{{f.report_id or ''}}</td><td>{{f.detail}}</td></tr>{% else %}<tr><td colspan=5>none</td></tr>{% endfor %}</table></div>
+<h3>Students by trust</h3><div class="tbl"><table><tr><th>Name</th><th>Trust</th><th>Why</th></tr>
+{% for s in students %}<tr><td>{{s.name}}</td><td>{{'%.0f'|format(s.trust)}}</td><td><a href="/users/{{s.id}}/trust">event log</a></td></tr>{% endfor %}</table></div>
+{% endblock %}

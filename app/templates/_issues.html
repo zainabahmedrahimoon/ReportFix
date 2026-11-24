@@ -1,0 +1,11 @@
+<table><tr><th>#</th><th>Score</th><th>Priority</th><th>Status</th><th>Dept</th><th>Location</th><th>Issue</th><th>Reporters</th>{% if extra %}<th>{{extra}}</th>{% endif %}</tr>
+{% for i in issues %}<tr class="{{i.base_priority}} {{'conf' if i.is_confidential}}">
+<td><a href="/issue/{{i.id}}">#{{i.id}}</a></td>
+<td title="base + crowd boost {{i.boost}} (weighted {{i.weighted}})">{{i.score}}</td>
+<td>{{i.base_priority}}{% if i.is_safety %} ⚠ safety{% endif %}</td>
+<td>{{i.status}}{% if i.reopen_count %} (reopened {{i.reopen_count}}×){% endif %}</td>
+<td>{{i.department or 'ADMIN ONLY'}}</td><td>{{i.location or '-'}}</td>
+<td>{% if i.is_confidential %}🔒 {% endif %}{{i.title}}<div class="muted">{{i.reason}}</div></td>
+<td>{{i.reporters}} (w {{i.weighted}})</td>
+{% if extra %}<td>{{ i.my_kind }}{% if i.status=='resolved' %} — <a href="/issue/{{i.id}}">{{ 'voted: '+i.my_vote if i.my_vote else 'VOTE NOW' }}</a>{% endif %}</td>{% endif %}
+</tr>{% else %}<tr><td colspan="9">Nothing here.</td></tr>{% endfor %}</table>

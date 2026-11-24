@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block body %}
+<h2>Report a problem</h2>
+<div class="panel"><form method="post" action="/report"><b style="font-size:15px">What is wrong, and where?</b> <span class="muted">English, Roman Urdu or mixed. Typos are fine.</span>
+<textarea name="text" required minlength="5" placeholder="e.g. Lab 3 ka AC kaam nahi kar raha"></textarea>
+<button style="padding:9px 18px;font-size:14px">Submit report</button></form></div>
+<p class="muted">Name the place (Lab 3, Library, Lecture Hall 2, Cafeteria...). After you submit you land on <a href="/student/reports">My reports</a>, which shows exactly what happened to it: new issue, joined an existing one, or waiting for you.</p>
+{% for r in pending %}<div class="panel" style="border-left:4px solid var(--med)"><b>Needs a location:</b> "{{r.raw_text}}"<br>{{r.clarify_msg}}
+<form method="post" action="/report/{{r.id}}/clarify">{% include "_loc_picker.html" %}
+<button>Route it</button></form></div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block body %}
+<h2>Students by trust</h2>
+<p class="muted">Weight is what a student's report or vote counts for. Click the event log to see exactly why anyone has their score.</p>
+<div class="tbl"><table><tr><th>Name</th><th>Trust</th><th>Weight</th><th>Why</th></tr>
+{% for s in students %}<tr><td>{{s.u.name}}</td><td>{{'%.0f'|format(s.u.trust)}}</td><td>{{s.weight}}{% if s.probation %} (new account){% endif %}{% if s.u.trust < 30 %} not credible{% endif %}</td><td><a href="/users/{{s.u.id}}/trust">event log</a></td></tr>{% endfor %}</table></div>
+{% endblock %}

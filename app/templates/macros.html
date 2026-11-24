@@ -1,0 +1,31 @@
+{% macro who_counts(i) %}<b>{{i.reporters}}</b> student{{'' if i.reporters == 1 else 's'}}
+<div class="muted">{% set parts = [] %}{% if i.r_full %}{% set _ = parts.append(i.r_full ~ ' full weight') %}{% endif %}{% if i.r_new %}{% set _ = parts.append(i.r_new ~ ' new (half)') %}{% endif %}{% if i.r_zero %}{% set _ = parts.append(i.r_zero ~ ' low-trust (0)') %}{% endif %}{{ parts|join(', ') }}<br>counts as {{i.weighted}}</div>{% endmacro %}
+
+{% macro vote_box(i) %}{% set t = i.tally %}
+<div class="votes">&#10004; fixed <b>{{t.confirms}}</b> &middot; &#10008; still broken <b>{{t.disputes}}</b> <span class="muted">({{t.confirms + t.disputes}} of {{i.reporters}} affected voted)</span><br>
+<span class="muted">reopens now if dispute weight &ge; {{t.reopen_needed}} (has {{t.dispute_w}}); verified now if confirm weight &gt; {{(t.affected_w / 2)|round(2)}} (has {{t.confirm_w}}).
+{% if i.hours_left is not none %}Auto-closes in <b>{{i.hours_left}}h</b>: verified unless credible disputes &ge; confirms.{% endif %}</span></div>{% endmacro %}
+
+{% macro issue_table(issues, mode, me=None, back='') %}
+<div class="tbl"><table><tr><th>#</th><th title="base severity + crowd boost">Score</th><th>Priority</th><th>Status</th><th>Dept</th><th>Location</th><th>Issue</th><th title="Distinct students who reported this or pressed Me too. Names are never shown.">Students affected</th>
+{% if mode == 'student' %}<th>My part / vote</th>{% elif mode == 'board' and me and me.role == 'student' %}<th>Me too</th>{% elif mode == 'staff' %}<th>Quick action</th>{% elif mode == 'admin' %}<th>Fix check</th>{% endif %}</tr>
+{% for i in issues %}<tr class="{{i.base_priority}} {{'conf' if i.is_confidential}}">
+<td><a href="/issue/{{i.id}}">#{{i.id}}</a></td>
+<td class="num">{{i.score}}<div class="muted" style="font-weight:400">{{ {'critical':100,'high':60,'medium':35,'low':15}[i.base_priority] }} + {{i.boost}} crowd</div></td>
+<td><span class="badge p-{{i.base_priority}}">{{i.base_priority}}</span>{% if i.is_safety %}<div style="margin-top:4px"><span class="badge b-safety">&#9888; safety</span></div>{% endif %}</td>
+<td><span class="badge s-{{i.status}}">{{i.status|replace('_',' ')}}</span>{% if i.reopen_count %}<div class="muted">reopened {{i.reopen_count}}&times;</div>{% endif %}</td>
+<td>{% if i.department %}<span class="badge b-dept">{{i.department}}</span>{% else %}<span class="badge b-conf">ADMIN ONLY</span>{% endif %}</td><td>{{i.location or '-'}}</td>
+<td style="min-width:240px">{% if i.is_confidential %}<span class="badge b-conf">&#128274; confidential</span> {% endif %}<a class="title" href="/issue/{{i.id}}">{{i.title}}</a><div class="muted">{{i.reason}}</div></td>
+<td>{{ who_counts(i) }}</td>
+{% if mode == 'student' %}<td>{{ 'reported it' if i.my_kind == 'original' else 'joined (me too)' }}{% if i.status=='resolved' %} &mdash; {% if i.my_vote %}you voted: {{i.my_vote}}{% else %}<a href="/issue/{{i.id}}"><b>VOTE NOW</b></a>{% if i.hours_left is not none %} <span class="muted">({{i.hours_left}}h left)</span>{% endif %}{% endif %}{% endif %}</td>
+{% elif mode == 'board' and me and me.role == 'student' %}<td>{% if i.joined %}&#10004; you're on it{% elif i.status in ['open','in_progress','resolved'] %}<form class="inline" method="post" action="/issue/{{i.id}}/metoo"><input type="hidden" name="back" value="/board"><button>+ Me too</button></form>{% else %}<span class="muted">closed</span>{% endif %}</td>
+{% elif mode == 'staff' %}<td>
+{% if i.status == 'open' %}{% if i.reopen_count %}<b>Students said it is NOT fixed.</b><br>{% endif %}<form class="inline" method="post" action="/issue/{{i.id}}/status"><input type="hidden" name="back" value="{{back}}"><button name="to" value="in_progress">Start work</button></form>
+{% elif i.status == 'in_progress' %}<form class="inline" method="post" action="/issue/{{i.id}}/status"><input type="hidden" name="back" value="{{back}}"><button name="to" value="resolved">Mark resolved</button></form>
+{% elif i.status == 'resolved' %}<b>Students are checking your fix</b>{{ vote_box(i) }}
+<form class="inline" method="post" action="/issue/{{i.id}}/status"><input type="hidden" name="back" value="{{back}}"><input type="hidden" name="note" value="staff: not actually fixed yet"><button name="to" value="open">Reopen (not fixed yet)</button></form>
+{% elif i.status == 'verified' %}&#10004; fix confirmed{% else %}<span class="muted">{{i.status}}</span>{% endif %}
+<br><a href="/issue/{{i.id}}">details / transfer</a></td>
+{% elif mode == 'admin' %}<td>{% if i.tally %}{{ vote_box(i) }}<form class="inline" method="post" action="/issue/{{i.id}}/close-voting"><input type="hidden" name="back" value="{{back or '/admin'}}"><button>Close voting now</button></form>{% elif i.status == 'verified' %}&#10004; verified{% else %}<span class="muted">-</span>{% endif %}</td>{% endif %}
+</tr>{% else %}<tr><td colspan="9" class="muted" style="text-align:center;padding:24px">Nothing here.</td></tr>{% endfor %}</table></div>
+{% endmacro %}

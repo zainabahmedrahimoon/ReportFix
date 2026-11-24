@@ -1,0 +1,5 @@
+<select class="dept" required><option value="">Department...</option>{% for d in loc_map %}<option>{{d}}</option>{% endfor %}</select>
+<select name="location" class="loc" required disabled><option value="">Pick department first</option></select>
+<script>(function(){var m={{loc_map|tojson}},f=document.currentScript.parentElement,d=f.querySelector('.dept'),l=f.querySelector('.loc');
+d.onchange=function(){l.innerHTML='';var a=m[d.value]||[];l.disabled=!a.length;
+if(a.length>1)l.add(new Option('Select place...',''));a.forEach(function(x){l.add(new Option(x,x))});};})();</script>

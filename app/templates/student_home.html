@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% from "macros.html" import issue_table %}{% block body %}
+<meta http-equiv="refresh" content="30;url=/student">
+<h2>My dashboard</h2>
+<p class="muted">Your report weight: {{weight}}{% if probation %} (new account: halved until a report/vote is validated){% endif %}. This page refreshes itself every 30 seconds.</p>
+<div class="stats">
+ <div class="card"><b>{{stats.open}}</b>open</div><div class="card"><b>{{stats.in_progress}}</b>in progress</div>
+ <div class="card {{'alert' if stats.resolved}}"><b>{{stats.resolved}}</b>resolved (check the fix!)</div><div class="card"><b>{{stats.verified}}</b>verified</div>
+</div>
+<p><a class="btn" href="/student/report" style="text-decoration:none">+ Report a new problem</a> &nbsp; <a href="/student/reports">See everything I submitted &rarr;</a></p>
+{% if pending %}<div class="msg"><b>{{pending|length}} report(s) are waiting for you</b> to pick a location. <a href="/student/report">Finish them</a></div>{% endif %}
+{% if to_vote %}<h3>Fixes waiting for your vote</h3>
+<p class="muted">Staff marked these resolved. Is it really fixed?</p>
+{{ issue_table(to_vote, 'student') }}{% endif %}
+<h3>Issues I reported or joined (live status)</h3>
+{{ issue_table(issues, 'student') }}
+{% endblock %}

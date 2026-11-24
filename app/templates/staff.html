@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% from "macros.html" import issue_table %}{% block body %}
+<h2>{{me.department}} queue</h2>
+<p class="muted">Only {{me.department}} issues, highest priority first. Confidential reports never appear here.</p>
+<p class="tabs">{% for key, label in tabs %}<a href="/staff?status={{key}}" class="{{'on' if tab==key}}">{{label}} ({{counts[key]}})</a>{% endfor %}</p>
+{{ issue_table(issues, 'staff', me, '/staff?status=' ~ tab) }}
+{% endblock %}

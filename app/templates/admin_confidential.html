@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block body %}
+<h2>Confidential cases</h2>
+<p class="muted">Harassment / ragging. Visible only to the Admin; reporters appear as anonymous IDs; never on any board or department queue. Sorted: open cases first, then by priority (harassment is never below <b>high</b>; physical, sexual, blackmail or threat reports are <b>critical</b>), then longest waiting.</p>
+<div class="tbl"><table><tr><th>#</th><th>Priority</th><th>Status</th><th>Location</th><th>Report</th><th>Reporter</th><th>Opened</th><th>Action</th></tr>
+{% for c in cases %}<tr class="conf {{c.base_priority}}"><td><a href="/issue/{{c.id}}">#{{c.id}}</a></td><td><span class="badge p-{{c.base_priority}}">{{c.base_priority}}</span>{% if c.is_safety %} &#9888; safety{% endif %}</td><td><span class="badge s-{{c.status}}">{{c.status|replace('_',' ')}}</span></td><td>{{c.location or '-'}}</td>
+<td>&#128274; {{c.title}}<div class="muted">{{c.reason}}</div></td><td>{{ c.reporter_ids|join(', ') }}</td><td class="muted">{{c.created_at[:16]|replace('T',' ')}}</td>
+<td>{% if c.status == 'open' %}<form class="inline" method="post" action="/issue/{{c.id}}/status"><input type="hidden" name="back" value="/admin/confidential"><button name="to" value="in_progress">Start handling</button></form>
+{% elif c.status == 'in_progress' %}<form class="inline" method="post" action="/issue/{{c.id}}/status"><input type="hidden" name="back" value="/admin/confidential"><button name="to" value="resolved">Mark resolved</button></form>
+{% else %}<span class="muted">{{c.status}}</span>{% endif %}</td></tr>
+{% else %}<tr><td colspan="8">No confidential cases.</td></tr>{% endfor %}</table></div>
+{% endblock %}
